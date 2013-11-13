@@ -64,6 +64,8 @@ def parse_tweets():
         hashfiles[c] = open(os.path.join(outdir_, 'hash_' + c + '.txt'), 'w')
         linkfiles[c] = open(os.path.join(outdir_, 'link_' + c + '.txt'), 'w')
     
+    count = 0
+    
     while(running_):
         tweet = queue_.get()
         
@@ -95,6 +97,11 @@ def parse_tweets():
             if tweet['entities']['urls']:
                 urls = [u['expanded_url'] for u in tweet['entities']['urls']]
                 linkfiles[city].write("%s %s\n" % (str(tstamp), " ".join(urls)))
+               
+            count += 1 
+            if count % 100 == 0:
+                for file in wordfiles.values() + hashfiles.values() + linkfiles.values():
+                    file.flush()
     
     for file in wordfiles.values() + hashfiles.values() + linkfiles.values():
         file.close()
