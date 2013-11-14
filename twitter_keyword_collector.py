@@ -71,7 +71,7 @@ def parse_tweets():
         tweet = queue_.get()
         
         # place tweet into a city
-        if not tweet['place']['bounding_box']:
+        if not tweet['place'] or not tweet['place']['bounding_box']:
             continue
             
         poly = asShape(tweet['place']['bounding_box'])
