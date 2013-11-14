@@ -18,6 +18,7 @@ OAUTH_TOKEN = '402933727-iCFAaiah9XVGZ4iJtYiCX6UAccXD4eZgzT0s8nKe'
 OAUTH_SECRET = 'C54uvKvXDAyru9dQiUGXSEHHxGXAemBsHullBbAuM1Ww8'
 
 WORD_REGEX = re.compile(r'^([a-zA-Z\'\"\?\.\!]+)$')
+HASH_REGEX = re.compile(r'^(\w+)$')
 
 CITYS = {"los_angeles": Polygon([(-118.66333,33.610045), (-118.66333,34.415973), (-117.702026,34.415973), (-117.702026,33.610045)]),
          "san_francisco": Polygon([(-122.75,36.8), (-122.75,37.8), (-121.75,37.8), (-121.75,36.8)]),
@@ -94,7 +95,7 @@ def parse_tweets():
             wordfiles[city].write("%s %s\n" % (str(tstamp), " ".join(words)))
             
             if tweet['entities']['hashtags']:
-                tags = [h['text'] for h in tweet['entities']['hashtags']]
+                tags = [m.group().lower() for m in (HASH_REGEX.match(h['text']) for h in tweet['entities']['hashtags']) if m]
                 hashfiles[city].write("%s %s\n" % (str(tstamp), " ".join(tags)))
                 
             if tweet['entities']['urls']:
