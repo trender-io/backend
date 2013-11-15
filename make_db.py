@@ -19,7 +19,8 @@ def build_table(db, file, table, area):
         
         time = parts[0][:parts[0].rfind('.')]
         for p in parts[1:]:
-            cursor.execute("INSERT INTO %s VALUES (datetime(?, 'unixepoch'), ?)" % table, (int(time), p))
+            cursor.execute("INSERT INTO %s VALUES (?, (SELECT city_id FROM cities WHERE name=?), ?)" % table, \
+                           (int(time), area, p))
 
 
 TABLES = ["word", "hash", "link"]
@@ -35,8 +36,13 @@ if os.path.exists(dbfile_):
 db = sqlite3.connect(dbfile_)
 cursor = db.cursor()
 
+cursor.execute("CREATE TABLE cities (city_id INTEGER PRIMARY KEY ASC, name TEXT)")
+for city in AREAS:
+    cursor.execute("INSERT INTO cities(name) VALUES (?)", (city,))
+db.commit()    
+
 for table in TABLES:
-    cursor.execute("CREATE TABLE %s (tstamp TIMESTAMP, val TEXT)" % table)
+    cursor.execute("CREATE TABLE %s (tstamp INT, city_id INTEGER, val TEXT)" % table)
     db.commit()
     
     for area in AREAS:
