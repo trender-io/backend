@@ -35,5 +35,6 @@ for city in AREAS:
                          "1_day": [row for row in cursor.execute(FREQ_QUERY % t, (city, now - 86400, now))],
                          "1_week": [row for row in cursor.execute(FREQ_QUERY % t, (city, now - 604800, now))],
                          "all": [row for row in cursor.execute(FREQ_QUERY % t, (city, 0, now))]}
-                         
+
+db.close()
 print json.dumps(freq, indent=4)
