@@ -48,8 +48,16 @@ class SimpleCollector(TwythonStreamer):
 
 
 def collect_location(locs):
-    stream = SimpleCollector(APP_KEY, APP_SECRET, OAUTH_TOKEN, OAUTH_SECRET)
-    stream.statuses.filter(locations=locs)
+    stream = None
+    
+    while(running_):
+        try:
+            stream = SimpleCollector(APP_KEY, APP_SECRET, OAUTH_TOKEN, OAUTH_SECRET)
+            stream.statuses.filter(locations=locs)
+        except:
+            print "CAUGHT EXCEPTION, RECONNECTING"
+            if stream:
+                stream.disconnect()
 
 
 def parse_tweets():
@@ -61,9 +69,9 @@ def parse_tweets():
         os.makedirs(outdir_)
     
     for c in AREAS.keys():
-        wordfiles[c] = open(os.path.join(outdir_, 'word_' + c + '.txt'), 'w')
-        hashfiles[c] = open(os.path.join(outdir_, 'hash_' + c + '.txt'), 'w')
-        linkfiles[c] = open(os.path.join(outdir_, 'link_' + c + '.txt'), 'w')
+        wordfiles[c] = open(os.path.join(outdir_, 'word_' + c + '.txt'), 'a')
+        hashfiles[c] = open(os.path.join(outdir_, 'hash_' + c + '.txt'), 'a')
+        linkfiles[c] = open(os.path.join(outdir_, 'link_' + c + '.txt'), 'a')
     
     count = 0
     
@@ -76,7 +84,7 @@ def parse_tweets():
             
         poly = asShape(tweet['place']['bounding_box'])
         city = None
-        for c,p in CITYS.items():
+        for c,p in AREAS.items():
             if p.intersects(poly):
                 city = c
                 break
