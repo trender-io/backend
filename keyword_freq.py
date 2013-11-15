@@ -6,9 +6,10 @@ import sqlite3
 
 AREAS = ["boston", "new_york", "los_angeles", "san_francisco", "chicago"]
 
-FREQ_QUERY = "SELECT val,COUNT(*) FROM %s " \
-             "WHERE city_id=(SELECT city_id FROM cities WHERE name=?) AND " \
-             "tstamp BETWEEN ? AND ? GROUP BY val ORDER BY COUNT(*) DESC"
+FREQ_QUERY = "SELECT vals.val,COUNT(*) FROM %s tab,vals WHERE " \
+             "tab.city_id = (SELECT city_id FROM cities WHERE name=?) AND " \
+             "tab.val_id = vals.val_id AND " \
+             "tab.tstamp BETWEEN ? AND ? GROUP BY vals.val ORDER BY COUNT(*) DESC"
 
 dbfile_ = 'twitter.db'
 
