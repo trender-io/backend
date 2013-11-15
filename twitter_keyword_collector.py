@@ -96,7 +96,7 @@ def parse_tweets():
         tweet_text = tweet['text'].encode('utf-8')
         words = [m.group().lower() for m in (WORD_REGEX.match(t) for t in tweet_text.split()) if m]
         lang = guess_language(" ".join(words))
-        words = set([w.translate(None, '.?!,\'\"') for w in words])
+        words = [w.translate(None, '.?!,\'\"') for w in words]
         
         if words and lang == 'en':
             tstamp = time.time()
