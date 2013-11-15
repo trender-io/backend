@@ -19,11 +19,13 @@ def build_table(db, file, table, area):
         
         time = parts[0][:parts[0].rfind('.')]
         for p in parts[1:]:
-            cursor.execute("INSERT INTO %s VALUES (?, (SELECT city_id FROM cities WHERE name=?), ?)" % table, \
+            cursor.execute("INSERT OR IGNORE INTO vals(val) VALUES (?)", (p,))
+            cursor.execute("INSERT INTO %s VALUES " \
+                           "(?, (SELECT city_id FROM cities WHERE name=?), (SELECT val_id FROM vals WHERE val=?))" % table, \
                            (int(time), area, p))
 
 
-TABLES = ["word", "hash", "link"]
+TABLES = ["word", "hash"]
 AREAS = ["boston", "new_york", "los_angeles", "san_francisco", "chicago"]
 
 # globals. coul be passed params
@@ -36,13 +38,14 @@ if os.path.exists(dbfile_):
 db = sqlite3.connect(dbfile_)
 cursor = db.cursor()
 
-cursor.execute("CREATE TABLE cities (city_id INTEGER PRIMARY KEY ASC, name TEXT)")
+cursor.execute("CREATE TABLE vals (val_id INTEGER PRIMARY KEY ASC, val TEXT NOT NULL UNIQUE)")
+cursor.execute("CREATE TABLE cities (city_id INTEGER PRIMARY KEY ASC, name TEXT NOT NULL UNIQUE)")
 for city in AREAS:
     cursor.execute("INSERT INTO cities(name) VALUES (?)", (city,))
 db.commit()    
 
 for table in TABLES:
-    cursor.execute("CREATE TABLE %s (tstamp INT, city_id INTEGER, val TEXT)" % table)
+    cursor.execute("CREATE TABLE %s (tstamp INT, city_id INTEGER, val_id INTEGER)" % table)
     db.commit()
     
     for area in AREAS:
