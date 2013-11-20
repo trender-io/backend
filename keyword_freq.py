@@ -2,7 +2,9 @@ import os
 import sys
 import time
 import json
+import re
 import sqlite3
+import RAKE.rake as rake
 
 AREAS = ["boston", "new_york", "los_angeles", "san_francisco", "chicago"]
 
@@ -15,15 +17,19 @@ TWEET_QUERY = "SELECT tweet FROM tweets WHERE " \
               "city_id = (SELECT city_id FROM cities WHERE name=?) AND " \
               "tstamp BETWEEN ? AND ?"
 
+PUNC = re.compile(r'[^a-zA-Z]$')
+
 
 # runs the RAKE algorithm on a "document" of tweets. 
 # the document is just the tweets from a given city over a time period
 def run_rake(city, start, end):
     db = sqlite3.connect(dbfile_)
     cursor = db.cursor()
-    
+
+    tweets = [tweet + '.' if m else tweet for tweet,m in ((row[0], PUNC.match(row[0])) for row in cursor.execute(TWEET_QUERY, (city, start, end)))]
     db.close()
-    return []
+
+    return rake.extractKeywords(" ".join(tweets))
     
 
 dbfile_ = os.path.join('collected', 'twitter.db')
@@ -59,9 +65,9 @@ for city in AREAS:
 db.close()
 
 with open('freq.json', 'w') as fp:
-    json.dump(freq, fp, indent=4)
+    json.dump(freq, fp)
     fp.close()
 
 with open('keywords.json', 'w') as fp:
-    json.dump(kw, fp, indent=4)
+    json.dump(kw, fp)
     fp.close()

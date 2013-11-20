@@ -1,15 +1,13 @@
 # Implementation of RAKE - Rapid Automtic Keyword Exraction algorithm
 # as described in:
-# Rose, S., D. Engel, N. Cramer, and W. Cowley (2010). 
-# Automatic keyword extraction from indi-vidual documents. 
+# Rose, S., D. Engel, N. Cramer, and W. Cowley (2010).
+# Automatic keyword extraction from indi-vidual documents.
 # In M. W. Berry and J. Kogan (Eds.), Text Mining: Applications and Theory.unknown: John Wiley and Sons, Ltd.
 
 import re
 import operator
 import math
-
-debug = False
-test = True
+import os
 
 def isnum (s):
     try:
@@ -38,7 +36,7 @@ def separatewords(text,minWordReturnSize):
 	for singleWord in splitter.split(text):
 		currWord = singleWord.strip().lower()
 		#leave numbers in phrase, but don't count as words, since they tend to invlate scores of their phrases
-		if len(currWord)>minWordReturnSize and currWord != '' and not isnum(currWord): 
+		if len(currWord)>minWordReturnSize and currWord != '' and not isnum(currWord):
 			words.append(currWord)
 	return words
 
@@ -73,7 +71,7 @@ def calculateWordScores(phraseList):
 	wordfreq = {}
 	worddegree = {}
 	for phrase in phraseList:
-		wordlist = separatewords(phrase,0) 
+		wordlist = separatewords(phrase,0)
 		wordlistlength = len(wordlist)
 		wordlistdegree = wordlistlength - 1
 		#if wordlistdegree > 3: wordlistdegree = 3 #exp.
@@ -84,8 +82,8 @@ def calculateWordScores(phraseList):
 			worddegree[word] += wordlistdegree #orig.
 			#worddegree[word] += 1/(wordlistlength*1.0) #exp.
 	for item in wordfreq:
-		worddegree[item] = worddegree[item]+wordfreq[item] 	
-
+		worddegree[item] = worddegree[item]+wordfreq[item]
+	
 	# Calculate Word scores = deg(w)/frew(w)
 	wordscore = {}
 	for item in wordfreq:
@@ -93,40 +91,35 @@ def calculateWordScores(phraseList):
 		wordscore[item] = worddegree[item]/(wordfreq[item] * 1.0) #orig.
 		#wordscore[item] = wordfreq[item]/(worddegree[item] * 1.0) #exp.
 	return wordscore
-	
+
 def generateCandidateKeywordScores(phraseList, wordscore):
 	keywordcandidates = {}
 	for phrase in phraseList:
 		keywordcandidates.setdefault(phrase,0)
-		wordlist = separatewords(phrase,0) 
+		wordlist = separatewords(phrase,0)
 		candidatescore = 0
 		for word in wordlist:
 			candidatescore += wordscore[word]
 		keywordcandidates[phrase] = candidatescore
 	return keywordcandidates
 
-if test:
-	text = "Compatibility of systems of linear constraints over the set of natural numbers. Criteria of compatibility of a system of linear Diophantine equations, strict inequations, and nonstrict inequations are considered. Upper bounds for components of a minimal set of solutions and algorithms of construction of minimal generating sets of solutions for all types of systems are given. These criteria and the corresponding algorithms for constructing a minimal supporting set of solutions can be used in solving all the considered types of systems and systems of mixed types."
+# This is the function that puts it all together.
+def extractKeywords(text, stopPath=os.path.join(os.path.dirname(os.path.realpath(__file__)), "SmartStoplist.txt"), debug=False):
+    sentenceList = splitSentences(text)
+    stopwordPattern = buildStopwordRegExPattern(stopPath)
+    phraseList = generateCandidateKeywords(sentenceList, stopwordPattern)
+    wordScores = calculateWordScores(phraseList)
+    keywordCandidates = generateCandidateKeywordScores(phraseList, wordScores)
+    if debug: print keywordCandidates
+	
+    sortedKeywords = sorted(keywordCandidates.iteritems(), key=operator.itemgetter(1), reverse=True)
+    if debug: print sortedKeywords
+    
+    return sortedKeywords
 
-	# Split text into sentences
-	sentenceList = splitSentences(text)
-	#stoppath = "FoxStoplist.txt" #Fox stoplist contains "numbers", so it will not find "natural numbers" like in Table 1.1
-	stoppath = "SmartStoplist.txt" #SMART stoplist misses some of the lower-scoring keywords in Figure 1.5, which means that the top 1/3 cuts off one of the 4.0 score words in Table 1.1
-	stopwordpattern = buildStopwordRegExPattern(stoppath)
-
-	# generate candidate keywords
-	phraseList = generateCandidateKeywords(sentenceList, stopwordpattern)
-
-	# calculate individual word scores
-	wordscores = calculateWordScores(phraseList)
-
-	# generate candidate keyword scores
-	keywordcandidates = generateCandidateKeywordScores(phraseList, wordscores)
-	if debug: print keywordcandidates
-
-	sortedKeywords = sorted(keywordcandidates.iteritems(), key=operator.itemgetter(1), reverse=True)
-	if debug: print sortedKeywords
-
-	totalKeywords = len(sortedKeywords)
-	if debug: print totalKeywords
-	print sortedKeywords[0:(totalKeywords/3)]
+def testExtraction():
+    text = "Compatibility of systems of linear constraints over the set of natural numbers. Criteria of compatibility of a system of linear Diophantine equations, strict inequations, and nonstrict inequations are considered. Upper bounds for components of a minimal set of solutions and algorithms of construction of minimal generating sets of solutions for all types of systems are given. These criteria and the corresponding algorithms for constructing a minimal supporting set of solutions can be used in solving all the considered types of systems and systems of mixed types."
+    sortedKeywords = extractKeywords(text)
+    totalKeywords = len(sortedKeywords)
+    print totalKeywords
+    print sortedKeywords[0:(totalKeywords/3)]
