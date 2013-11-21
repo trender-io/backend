@@ -29,7 +29,7 @@ def run_rake(city, start, end):
     tweets = [tweet + '.' if m else tweet for tweet,m in ((row[0], PUNC.match(row[0])) for row in cursor.execute(TWEET_QUERY, (city, start, end)))]
     db.close()
 
-    return rake.extractKeywords(" ".join(tweets))
+    return rake.extractKeywords(" ".join(tweets), stopPath='RAKE/TwitterStoplist.txt')
     
 
 dbfile_ = os.path.join('collected', 'twitter.db')
@@ -58,10 +58,10 @@ for city in AREAS:
                          "1_week": [row for row in cursor.execute(FREQ_QUERY % t, (city, now - 604800, now))],
                          "all": [row for row in cursor.execute(FREQ_QUERY % t, (city, 0, now))]}
                          
-    kw[city] = {"1_hour": run_rake(city, now - 3600, now),
-                "6_hour": run_rake(city, now - 21600, now),
-                "12_hour": run_rake(city, now - 43200, now),
-                "1_day": run_rake(city, now - 86400, now)}
+    kw[city] = {"1_hour": run_rake(city, now - 3600, now)[:20],
+                "6_hour": run_rake(city, now - 21600, now)[:20],
+                "12_hour": run_rake(city, now - 43200, now)[:20],
+                "1_day": run_rake(city, now - 86400, now)[:20]}
 db.close()
 
 with open('freq.json', 'w') as fp:
