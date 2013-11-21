@@ -188,6 +188,7 @@ gives
 go
 goes
 going
+gonna
 gone
 got
 gotten
@@ -508,6 +509,7 @@ through
 throughout
 thru
 thus
+thx
 til
 till
 to
