@@ -58,6 +58,10 @@ def collect_location(locs):
 def parse_tweets():    
     db = sqlite3.connect(dbfile_)
     cursor = db.cursor()
+    cursor.execute("PRAGMA journal_mode = WAL")
+    
+    if cursor.fetchone()[0] != "wal":
+        print "Could not set journal_mode!"
     
     wordfiles = {}
     hashfiles = {}
@@ -130,7 +134,7 @@ def parse_tweets():
                                    (tstamp, city, u))
                 
                 linkfiles[city].write("%d %s\n" % (tstamp, " ".join(urls)))
-               
+            
             db.commit()
             
             count += 1 
@@ -159,8 +163,7 @@ def make_db():
     
     for city in AREAS:
         cursor.execute("INSERT INTO cities(name) VALUES (?)", (city,))
-        
-    db.commit()    
+ 
     db.close()
 
 
