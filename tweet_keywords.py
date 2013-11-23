@@ -9,6 +9,7 @@ from collections import Counter
 import sqlite3
 
 AREAS = ["boston", "new_york", "los_angeles", "san_francisco", "chicago"]
+DAYS = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday']
 
 TWEET_QUERY = "SELECT tweet FROM tweets WHERE tstamp BETWEEN ? AND ?"
 
@@ -17,7 +18,8 @@ SENTENCE_DELIM = re.compile(u'[.!?,;:\t\\-\\"\\(\\)\u2019\u2013]')
 
 def extract_terms(tweet):
     global stoplist
-    terms = []
+    unigrams = []
+    bigrams = []
     sentences = SENTENCE_DELIM.split(tweet.lower())
     nwords = 0
     
@@ -26,16 +28,16 @@ def extract_terms(tweet):
             continue
         
         # unigrams
-        words = sentence.split()
+        words = [w.replace("'s", '') for w in sentence.split()]
         nwords += len(words)
-        terms.extend([w for w in words if w not in stoplist])
+        unigrams.extend([w for w in words if w not in stoplist])
         
         # bigrams
         for w1,w2 in zip(words, words[1:]):
             if (not w1 in stoplist) and (not w2 in stoplist):
-                terms.append("%s %s" % (w1, w2))
+                bigrams.append("%s %s" % (w1, w2))
             
-    return terms,nwords
+    return (unigrams, bigrams, nwords)
 
 
 def compute_keywords(dbcursor, start, end, limit):
@@ -53,19 +55,23 @@ def compute_keywords(dbcursor, start, end, limit):
     idf_mean /= len(baseline['metrics'])
     atf_norm_mean /= len(baseline['metrics'])
     
-    # get tweets for the last hour
+    # get tweets for the time period requested
     tweets = [row[0] for row in dbcursor.execute(TWEET_QUERY, (start, end))]
     count = Counter()
     nwords = 0.
     
     # extract terms from each tweet and update document metrics
     for t in tweets:
-        terms,n = extract_terms(t)
-        count.update(terms)
+        uni,bi,n = extract_terms(t)
+        count.update(uni + bi)
         nwords += n
     
     # filter out terms that do not appear that often
     freq = [(k,c) for k,c in count.items() if c >= thresh]
+    
+    # try to promote bigrams by removing the unigrams that comprise them
+    del_unigrams = set([s for sublist in [k.split() for k,c in freq if " " in k] for s in sublist])
+    freq = [(k,c) for k,c in freq if not k in del_unigrams]
     
     # first method - compute a trendings core using the normalized term frequency from this
     # document and the average normalized term frequency from the baseline
@@ -79,7 +85,7 @@ def compute_keywords(dbcursor, start, end, limit):
     return {'ts': ts, 'tf_idf': tf_idf}
     
 
-limit = 20
+limit = 50
 thresh = 10
 dbfile = os.path.join('collected', 'twitter.db')
 baselinefile = 'twitter_baseline.json'
@@ -106,7 +112,8 @@ fp = open(stoplistfile, 'r')
 for l in fp.readlines():
     stoplist |= set(l.lower().rstrip().split())
 stoplist |= set([s.replace("'",'') for s in stoplist if "'" in s])
-stoplist |= set([s for s in baseline['metrics'].keys() if baseline['metrics'][s]['df'] / baseline['ndocs'] >= 0.75])
+stoplist |= set([s for s in baseline['metrics'].keys() if baseline['metrics'][s]['df'] / baseline['ndocs'] >= 0.8])
+stoplist |= set([s for s in DAYS + [s + 's' for s in DAYS] + [s + "'s" for s in DAYS]])
 fp.close()
 
 db = sqlite3.connect(dbfile)
