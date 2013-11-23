@@ -1,4 +1,8 @@
-#stop word list from SMART (Salton,1971).  Available at ftp://ftp.cs.cornell.edu/pub/smart/english.stop
+# stop word list from SMART (Salton,1971).  
+# available at ftp://ftp.cs.cornell.edu/pub/smart/english.stop
+# modified with extra Twitter words
+'
+'s
 a
 a's
 able
@@ -68,6 +72,7 @@ becoming
 been
 before
 beforehand
+beh
 behind
 being
 believe
@@ -204,6 +209,7 @@ hadn't
 haha
 hahaha
 hahahaha
+hangover
 happens
 hardly
 has
@@ -212,6 +218,7 @@ have
 haven't
 having
 he
+he'll
 he's
 hell
 hello
@@ -236,6 +243,7 @@ hopefully
 how
 howbeit
 however
+hungover
 i
 i'd
 i'll
@@ -342,6 +350,7 @@ no
 nobody
 non
 none
+noon
 noone
 nor
 normally
@@ -437,6 +446,7 @@ seven
 several
 shall
 she
+she'll
 she's
 shit
 should
@@ -521,6 +531,8 @@ tmrw
 til
 till
 to
+today
+today's
 together
 too
 took
