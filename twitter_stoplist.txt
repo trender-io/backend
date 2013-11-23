@@ -152,6 +152,7 @@ ever
 every
 everybody
 everyone
+everyone's
 everything
 everywhere
 ex
@@ -176,6 +177,7 @@ forth
 four
 from
 fuck
+fucking
 further
 furthermore
 g
@@ -190,6 +192,7 @@ goes
 going
 gonna
 gone
+goodnight
 got
 gotten
 greetings
@@ -290,6 +293,7 @@ liked
 likely
 little
 lmao
+lmfao
 lol
 lololol
 look
@@ -433,9 +437,12 @@ seven
 several
 shall
 she
+she's
 shit
 should
+should've
 shouldn't
+shown
 since
 six
 so
@@ -510,6 +517,7 @@ throughout
 thru
 thus
 thx
+tmrw
 til
 till
 to
@@ -523,6 +531,7 @@ tries
 truly
 try
 trying
+tweet
 twice
 two
 u
@@ -610,6 +619,7 @@ wtf
 wut
 x
 y
+y'all
 ya
 yah
 yay
