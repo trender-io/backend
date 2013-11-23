@@ -89,13 +89,13 @@ def parse_tweets():
                 break
         
         if not city:
-            continue
+            city = "unknown"
         
         # parse the tweet for unique words and figure out the language
         tweet_text = tweet['text'].encode('utf-8')
         cleaned = [m.group() for m in (WORD_REGEX.match(t) for t in tweet_text.split()) if m]
         lang = guess_language(" ".join(cleaned))
-        words = [w.lower().translate(None, '.?!,\"') for w in cleaned]
+        words = [w.lower().translate(None, '.?!,\"').replace("'s",'') for w in cleaned]
         
         if words and lang == 'en':
             tstamp = int(time.time())
@@ -161,7 +161,7 @@ def make_db():
     cursor.execute("CREATE TABLE hash (tstamp INT, city_id INTEGER, val_id INTEGER)")
     cursor.execute("CREATE TABLE link (tstamp INT, city_id INTEGER, val_id INTEGER)")
     
-    for city in AREAS:
+    for city in AREAS + ["unknown"]:
         cursor.execute("INSERT INTO cities(name) VALUES (?)", (city,))
  
     db.close()
