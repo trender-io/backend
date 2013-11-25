@@ -32,7 +32,7 @@ def extract_terms(tweet):
 stoplistfile = 'wiki_stoplist.txt'
     
 if not os.path.exists(stoplistfile):
-    print "MISSING TWITTER STOPLIST!"
+    print "MISSING STOPLIST!"
     sys.exit()
 
 stoplist = set()
