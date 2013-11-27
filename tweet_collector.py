@@ -161,7 +161,7 @@ def make_db():
     cursor.execute("CREATE TABLE hash (tstamp INT, city_id INTEGER, val_id INTEGER)")
     cursor.execute("CREATE TABLE link (tstamp INT, city_id INTEGER, val_id INTEGER)")
     
-    for city in AREAS + ["unknown"]:
+    for city in AREAS.keys() + ["unknown"]:
         cursor.execute("INSERT INTO cities(name) VALUES (?)", (city,))
  
     db.close()
