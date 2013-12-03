@@ -1,12 +1,8 @@
 import feedparser
 import json
-import numpy as np
-import networkx as nx
 import requests
 from pattern import web
-import matplotlib.pyplot as plt
 import pandas as pd
-import urllib2
 import time 
 import os
 
