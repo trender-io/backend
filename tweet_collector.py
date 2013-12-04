@@ -63,17 +63,6 @@ def parse_tweets():
     if cursor.fetchone()[0] != "wal":
         print "Could not set journal_mode!"
     
-    wordfiles = {}
-    hashfiles = {}
-    linkfiles = {}
-    
-    for c in AREAS.keys():
-        wordfiles[c] = open(os.path.join(outdir_, 'word_' + c + '.txt'), 'a')
-        hashfiles[c] = open(os.path.join(outdir_, 'hash_' + c + '.txt'), 'a')
-        linkfiles[c] = open(os.path.join(outdir_, 'link_' + c + '.txt'), 'a')
-    
-    count = 0
-    
     while(running_):
         tweet = queue_.get()
         
@@ -111,8 +100,6 @@ def parse_tweets():
                                "(?, (SELECT city_id FROM cities WHERE name=?), (SELECT val_id FROM vals WHERE val=?))", 
                                (tstamp, city, w))
             
-            wordfiles[city].write("%d %s\n" % (tstamp, " ".join(words)))
-            
             if tweet['entities']['hashtags']:
                 tags = [m.group().lower() for m in (HASH_REGEX.match(h['text']) for h in tweet['entities']['hashtags']) if m]
                 
@@ -122,8 +109,6 @@ def parse_tweets():
                                    "(?, (SELECT city_id FROM cities WHERE name=?), (SELECT val_id FROM vals WHERE val=?))", 
                                    (tstamp, city, t))
                 
-                hashfiles[city].write("%d %s\n" % (tstamp, " ".join(tags)))
-                
             if tweet['entities']['urls']:
                 urls = [u['expanded_url'] for u in tweet['entities']['urls']]
                 
@@ -132,22 +117,12 @@ def parse_tweets():
                     cursor.execute("INSERT INTO link VALUES " \
                                    "(?, (SELECT city_id FROM cities WHERE name=?), (SELECT val_id FROM vals WHERE val=?))", 
                                    (tstamp, city, u))
-                
-                linkfiles[city].write("%d %s\n" % (tstamp, " ".join(urls)))
             
             db.commit()
-            
-            count += 1 
-            if count % 100 == 0:                
-                for file in wordfiles.values() + hashfiles.values() + linkfiles.values():
-                    file.flush()
     
     # done collecting, clean up
     db.commit()
     db.close()
-    
-    for file in wordfiles.values() + hashfiles.values() + linkfiles.values():
-        file.close()
 
 
 def make_db():
