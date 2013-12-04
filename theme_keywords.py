@@ -1,6 +1,6 @@
 import pandas as pd
 import numpy as np
-import datetime
+from datetime import datetime, timedelta
 import time
 import pytz
 from sklearn.feature_extraction.text import CountVectorizer
@@ -105,8 +105,8 @@ if not os.path.exists(storyfile):
 
 base_df = pd.read_csv(storyfile)
 
-current = datetime.datetime.utcnow() # Current date
-recent_period = current - datetime.timedelta(days=3) # Period we're considering
+current = datetime.utcnow() # Current date
+recent_period = current - timedelta(days=3) # Period we're considering
 month_numbers = {'Jan': 1, 'Feb': 2, 'Mar': 3, 'Apr': 4, 'May': 5, 'Jun': 6,
                  'Jul': 7, 'Aug': 8, 'Sep': 9, 'Oct': 10, 'Nov': 11, 'Dec': 12} # Months dict
 
@@ -123,7 +123,7 @@ words_df['pct'] /= np.max(words_df['pct'])
 
 # Make a second df where we'll keep only the most recent stories
 filtered_df = base_df.copy()
-filtered_df.published = [datetime.datetime.strptime(p, "%Y-%m-%d %H:%M:%S") for p in filtered_df.published]
+filtered_df.published = [datetime.strptime(p, "%Y-%m-%d %H:%M:%S") if '-' in p else datetime.strptime(p[:-4], "%a, %d %b %Y %H:%M:%S") for p in filtered_df.published]
 
 # Filter the dataframe
 filtered_df = filtered_df.sort(columns="published", ascending=False)
