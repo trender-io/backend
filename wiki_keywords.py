@@ -83,7 +83,7 @@ nchanges['title'] = [t[0] for t in recent.groupby('pageid')['title'].unique()]
 
 # look for contentious articles
 nchanges['neditors'] = recent.groupby('pageid').user.nunique()
-nchanges = nchanges[nchanges.neditors >= 10]
+nchanges = nchanges[nchanges.neditors >= 5]
 nchanges = nchanges.sort('nchanges', ascending=False)[:50]
 
 keywords = set()
