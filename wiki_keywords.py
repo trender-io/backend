@@ -5,26 +5,31 @@ import json
 import requests
 import pandas as pd
 
+WORD_REGEX = re.compile(r'^([a-zA-Z\']+)$')
 SENTENCE_DELIM = re.compile(u'[.!?,;:\t\\-\\"\\(\\)\u2019\u2013]')
 
-def extract_terms(tweet):
+def extract_terms(text):
     global stoplist
     unigrams = []
     bigrams = []
-    sentences = SENTENCE_DELIM.split(tweet.lower())
+    sentences = SENTENCE_DELIM.split(text.lower())
     
     for sentence in sentences:
         if not sentence: 
             continue
         
         # unigrams
-        words = [w.replace("'s", '') for w in sentence.split()]
+        words = [m.group().replace("'s", '') for m in (WORD_REGEX.match(w) for w in sentence.split()) if m]
         unigrams.extend([w for w in words if w not in stoplist])
         
         # bigrams
-        for w1,w2 in zip(words, words[1:]):
-            if (not w1 in stoplist) and (not w2 in stoplist):
-                bigrams.append("%s %s" % (w1, w2))
+        parts = [w.replace("'s", '') for w in sentence.split()]
+        for w1,w2 in zip(parts, parts[1:]):
+            m1 = WORD_REGEX.match(w1)
+            m2 = WORD_REGEX.match(w2)
+            
+            if m1 and m2 and (not w1 in stoplist) and (not w2 in stoplist):
+                bigrams.append("%s %s" % (m1.group(), m2.group()))
             
     return (unigrams, bigrams)
 
