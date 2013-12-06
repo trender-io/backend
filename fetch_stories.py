@@ -125,17 +125,20 @@ else:
 rss_urls = pd.DataFrame.from_csv(rssfile).reset_index()
 
 for idx in rss_urls.index:
-    print "Updating RSS Feed: %s" % rss_urls.site[idx]
-    dfint,etag,modified = get_stories(rss_urls.site[idx].replace("'",""), rss_urls.etag[idx], rss_urls.modified[idx])
+    try:
+        print "Updating RSS Feed: %s" % rss_urls.site[idx]
+        dfint,etag,modified = get_stories(rss_urls.site[idx].replace("'",""), rss_urls.etag[idx], rss_urls.modified[idx])
     
-    if dfint is not None:
-        if dfint.empty:
-            print "no new stories from:", rss_urls.site[idx]
+        if dfint is not None:
+            if dfint.empty:
+                print "no new stories from:", rss_urls.site[idx]
             
-        if not dfint.empty:
-            stories = stories.append(dfint, ignore_index=True)
-            rss_urls.etag[idx] = etag
-            rss_urls.modified[idx] = modified 
+            if not dfint.empty:
+                stories = stories.append(dfint, ignore_index=True)
+                rss_urls.etag[idx] = etag
+                rss_urls.modified[idx] = modified 
+    except:
+        print "Exception fetching feed, skipping for now."
 
 rss_urls.to_csv(rssfile, index=False, encoding='utf-8')
 stories.to_csv(storyfile, index=False, encoding='utf-8')
