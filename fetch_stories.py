@@ -26,7 +26,7 @@ def get_recent(feed, date, url):
             data = requests.get(entry['link']).text
             dom = web.Element(data)
             cont=''
-            pic=None
+            pic=''
             wid=0
             hgt=0
             
