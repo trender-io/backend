@@ -123,7 +123,21 @@ words_df['pct'] /= np.max(words_df['pct'])
 
 # Make a second df where we'll keep only the most recent stories
 filtered_df = base_df.copy()
-filtered_df.published = [datetime.strptime(p, "%Y-%m-%d %H:%M:%S") if '-' in p else datetime.strptime(p[:-4], "%a, %d %b %Y %H:%M:%S") for p in filtered_df.published]
+
+ts = []
+# this is fucking ridiculous. why does our storeies DB have so many fucking date formats?
+for p in filtered_df.published:
+    try:
+        ts.append(datetime.strptime(p, "%Y-%m-%d %H:%M:%S"))
+    except:
+        try:
+            ts.append(datetime.strptime(p, "%a, %d %b %Y %H:%M:%S"))
+        except:
+            try:
+                ts.append(datetime.strptime(p[:-4], "%a, %d %b %Y %H:%M:%S"))
+            except:
+                ts.append(datetime.strptime(p[:-4], "%a, %d %b %Y %H:%M"))
+published['ts'] = ts
 
 # Filter the dataframe
 filtered_df = filtered_df.sort(columns="published", ascending=False)
