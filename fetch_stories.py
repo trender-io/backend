@@ -145,7 +145,6 @@ def get_stories(url,etg,mdfd):
     input: url,ETAG,last modified date
     output: Story Dataframe, ETAG, and Last mdoifed date
     """   
-    print url,etg,mdfd
     #Get stories from each feed
     try:
         feed = feedparser.parse(url, etag=etg if etg else None, modified=mdfd if mdfd else None)
