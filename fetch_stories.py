@@ -164,12 +164,12 @@ def get_stories(url,etg,mdfd):
             feed.etag
             return dfy, feed.etag, max_entry_date(feed)
         except:
-            print "This site does not support etag",url
+            #print "This site does not support etag",url
             return dfy, '', max_entry_date(feed)
             
     # no new entries
     if feed.status==304:
-        print feed.debug_message
+        #print feed.debug_message
         return None, '', ''
 
 
@@ -199,13 +199,10 @@ for idx in rss_urls.index:
         print "Error with feed, skipping for now."
         continue
         
-    if dfint is not None:
-        if dfint.empty:
-            print "No new stories."
-        else:
-            stories = stories.append(dfint, ignore_index=True)
-            rss_urls.etag[idx] = etag
-            rss_urls.modified[idx] = str(modified) if modified else ''
+    if dfint is not None and not dfint.empty:
+        stories = stories.append(dfint, ignore_index=True)
+        rss_urls.etag[idx] = etag
+        rss_urls.modified[idx] = str(modified) if modified else ''
 
 
 rss_urls.to_csv(rssfile, index=False, encoding='utf-8')
