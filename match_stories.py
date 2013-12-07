@@ -108,6 +108,7 @@ if not os.path.exists(storyfile):
 stories = pd.read_csv(storyfile).reset_index()
 stories = stories.drop_duplicates('title')
 stories.picture = stories.picture.astype(object).fillna('')
+stories.extract = stories.extract.astype(object).fillna('')
 stories.content = [unicode(c, 'utf8').replace(JSWARN, '').lower() for c in stories.content]
 
 ts = []
