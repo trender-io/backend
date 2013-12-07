@@ -207,4 +207,4 @@ for idx in rss_urls.index:
 stories = stories.drop_duplicates('title')
 
 rss_urls.to_csv(rssfile, index=False, encoding='utf-8')
-stories.to_csv(storyfile, index=False, encoding='utf-8')
+stories.to_csv(storyfile + ".new", index=False, encoding='utf-8')
