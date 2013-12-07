@@ -9,7 +9,7 @@ import psycopg2
 
 
 SOURCES = ["cnn", "bbc", "nbcnews", "cnbc", "guardian", "nytimes"]
-
+JSWARN = "Please turn on JavaScript. Media requires JavaScript to play."
 
 def extract_words(df):
     allwords=[]
@@ -104,9 +104,12 @@ if not os.path.exists(storyfile):
     print "MISSING STORY FILE!"
     sys.exit(-1)
 
+# load collected stories
 stories = pd.read_csv(storyfile).reset_index()
 stories = stories.drop_duplicates('title')
-stories['content'] = [unicode(c, 'utf8').lower() for c in stories.content]
+stories.picture = stories.picture.astype(object).fillna('')
+stories.content = [unicode(c, 'utf8').replace(JSWARN, '').lower() for c in stories.content]
+
 ts = []
 # this is fucking ridiculous. why does our storeies DB have so many fucking date formats?
 for p in stories.published:
@@ -121,6 +124,10 @@ for p in stories.published:
             except:
                 ts.append(datetime.strptime(p[:-4], "%a, %d %b %Y %H:%M"))
 stories['ts'] = ts
+
+# throw out stories older than a few days - not ideal for pos/neg analysis, 
+# but for now it is easiest to avoid older stories in this way, wihtout 
+# restructuring the codebase to filter them out later.
 stories = stories[stories.ts > datetime.utcnow() - timedelta(days=3)]
 
 if not os.path.exists(posfile):
@@ -175,13 +182,9 @@ for k in all_keywords:
 
 scores = sorted(scores, key=itemgetter(1), reverse=True)
 
-# connect to DB
-conn = psycopg2.connect("dbname=trender user=frontend password=tr3nderI0 host=trender.cow4slz21i2f.us-west-2.rds.amazonaws.com")
-cursor = conn.cursor()
-
 # match keywords with stories
-now = datetime.utcnow()
 count = 0
+new_stories = []
 
 for k,s in scores:
     ranked = []
@@ -206,11 +209,41 @@ for k,s in scores:
     
     ranked = sorted(ranked, key=itemgetter(2))
     story = stories[stories.link == ranked[0][1]].iloc[0]
+    # print k,story['title']
     
-    cursor.execute("INSERT INTO stories (title,extract,image,time,rating,created_at,updated_at) VALUES(%s,%s,%s,%s,%s,%s,%s);", 
-                   (story['title'][:255], story['description'][:255], story['picture'] if len(story['picture']) < 256 else '', story['ts'], count, now, now))
+    new_stories.append((story['title'][:255], 
+                        story['link'][:255], 
+                        story['description'][:255], 
+                        story['picture'] if len(story['picture']) < 256 else '', 
+                        story['ts'], 
+                        count))
     count += 1
+
+newdf = pd.DataFrame(new_stories, columns=["title", "url", "desc", "img", "ts", "score"]).drop_duplicates('url')
+
+# connect to DB
+conn = psycopg2.connect("dbname=trender user=frontend password=tr3nderI0 host=trender.cow4slz21i2f.us-west-2.rds.amazonaws.com")
+cursor = conn.cursor()
+
+# figure out the latest story in the DB
+last = 0
+cursor.execute("SELECT id FROM STORIES ORDER BY id DESC LIMIT 1;")
+row = cursor.fetchone()
+if len(row) > 0:
+    last = row[0]
+
+now = datetime.utcnow()
+
+for idx,row in newdf.iterrows():
+    cursor.execute("INSERT INTO stories (title,url,extract,image,time,rating,created_at,updated_at) VALUES(%s,%s,%s,%s,%s,%s,%s,%s);", 
+                   (row['title'], row['url'], row['desc'], row['img'], row['ts'], row['score'], now, now))
     
 conn.commit()
+
+# remove old stories
+if last > 0:
+    cursor.execute("DELETE FROM stories WHERE id <= %s;" % (last,))
+    conn.commit()
+
 cursor.close()
 conn.close()
