@@ -134,7 +134,6 @@ def max_entry_date(feed):
         #eliminated nuls
         entry_pub_dates = tuple(e for e in entry_pub_dates if e is not None)
         #calculate max date and return
-        print entry_pub_dates
         if len(entry_pub_dates) > 0:
             return time.strftime("%a, %d %b %Y %H:%M:%S %Z", max(entry_pub_dates))
         return ''
