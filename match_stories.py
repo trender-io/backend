@@ -108,7 +108,7 @@ if not os.path.exists(storyfile):
 stories = pd.read_csv(storyfile).reset_index()
 stories = stories.drop_duplicates('title')
 stories.picture = stories.picture.astype(object).fillna('')
-stories.extract = stories.extract.astype(object).fillna('')
+stories.description = stories.description.astype(object).fillna('')
 stories.content = [unicode(c, 'utf8').replace(JSWARN, '').lower() for c in stories.content]
 
 ts = []
@@ -221,6 +221,7 @@ for k,s in scores:
     count += 1
 
 newdf = pd.DataFrame(new_stories, columns=["title", "url", "desc", "img", "ts", "score"]).drop_duplicates('url')
+count = len(newdf.title)
 
 # connect to DB
 conn = psycopg2.connect("dbname=trender user=frontend password=tr3nderI0 host=trender.cow4slz21i2f.us-west-2.rds.amazonaws.com")
@@ -237,7 +238,7 @@ now = datetime.utcnow()
 
 for idx,row in newdf.iterrows():
     cursor.execute("INSERT INTO stories (title,url,extract,image,time,rating,created_at,updated_at) VALUES(%s,%s,%s,%s,%s,%s,%s,%s);", 
-                   (row['title'], row['url'], row['desc'], row['img'], row['ts'], row['score'], now, now))
+                   (row['title'], row['url'], row['desc'], row['img'], row['ts'], count - row['score'], now, now))
     
 conn.commit()
 
