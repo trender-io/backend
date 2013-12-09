@@ -11,6 +11,24 @@ import re
 COLS = ['published', 'title', 'link', 'picture', 'height', 'width', 'description', 'content', 'source']
 
 
+def check_img(img, minh=0, minw=0):
+    src = img.attributes.get('src')
+
+    if src:
+        if not (".jpg" in src or ".png" in src):
+            return None
+    
+        h = img.attributes.get('height')
+        if h and minh and int(h) < minh:
+            return None
+            
+        w = img.attributes.get('width')
+        if w and minw and int(w) < minw:
+            return None
+    
+    return src
+
+
 def get_recent(feed, date, url):
     """
     This functions parses ONLY CNN feeds.
@@ -30,25 +48,18 @@ def get_recent(feed, date, url):
             wid=0
             hgt=0
             
-            #extract image
-            for p in dom.by_tag('img'):
-                if hasattr(p,'src'):
-                    if ("jpg" in p.attributes['src'] or "png" in p.attributes['src']) and "logo" not in p.attributes['src']:
-                        if hasattr(p,'height') and hasattr(p,'width'):
-                            if int(p.attributes['height'])>100:
-                                pic= p.attributes['src']
-                                wid= p.attributes['width']
-                                hgt= p.attributes['height']
-                                break
-
-            # if not pic:
-            #     continue
-            
-            #extract content
+            # extract image and content
             try:
                 if "rss.cnn" in str(url):
                     src = 'cnn'
                     desc = entry['summary_detail'].value.split('<')[0]
+                    
+                    for img in dom.by_tag('img'):
+                        imgsrc = check_img(img, minh=100)
+                        if imgsrc and "logo" not in imgsrc:
+                            pic = imgsrc
+                            break
+                    
                     for p in dom.by_tag('p'):
                         if "<strong>" in p.content or "cnn_storypgraph" in " ".join(p.attributes.values()):
                             cont+= re.sub('<[^<]+?>', '', p.content)  #remove HTML tags and add to cont
@@ -56,29 +67,45 @@ def get_recent(feed, date, url):
                 elif "feed://feeds.bbci.co.uk" in str(url):
                     src = 'bbc'
                     desc = entry['summary_detail'].value.split('<')[0]
+                    
+                    for img in dom.by_tag('img'):
+                        imgsrc = check_img(img, minh=150)
+                        if imgsrc:
+                            pic = imgsrc
+                            break
+                    
                     for div in dom.by_tag('div'):
                             if div.attributes.get('class') == "story-body":
                                 for p in div.by_tag('p'):
                                     #remove HTML tags and add to cont
                                     cont+= re.sub('<[^<]+?>', '', p.content)
-                                #ignore story is content less than 200 letters. Else write to DataFrame and return
-                                if len(cont) >200:
-                                    dicts=[{'published':entry['published'],'title':entry['title'],'link':entry['link'],
-                                            'picture':pic,'height':hgt,
-                                            'width':wid,'description':entry['summary_detail'].value.split('<')[0],'content':cont,'source':"bbc"}]
-                                    df = df.append(dicts, ignore_index=True)
                         
                 elif "feed://feeds.theguardian.com" in str(url):
                     src = 'guardian'
                     desc = entry['title_detail'].value
+                    
                     for div in dom.by_tag('div'):
-                            if div.attributes.get('id') == "article-body-blocks":
-                                for p in div.by_tag('p'):
-                                    cont+= re.sub('<[^<]+?>', '', p.content)
+                        if div.attributes.get('id') == "main-content-picture":
+                            for img in dom.by_tag('img'):
+                                imgsrc = check_img(img, minh=100)
+                                if imgsrc:
+                                    pic = imgsrc
+                                    break
+                        
+                        if div.attributes.get('id') == "article-body-blocks":
+                            for p in div.by_tag('p'):
+                                cont+= re.sub('<[^<]+?>', '', p.content)
                             
                 elif "feed://www.cnbc.com" in str(url):
                     src = 'cnbc'
                     desc = entry['summary_detail'].value
+                    
+                    for img in dom.by_tag('img'):
+                        imgsrc = check_img(img)
+                        if imgsrc and "240x160" in imgsrc:
+                            pic = imgsrc
+                            break
+                            
                     for div in dom.by_tag('div'):
                             if div.attributes.get('id') == "article_body":
                                 for p in div.by_tag('p'):
@@ -87,6 +114,13 @@ def get_recent(feed, date, url):
                 elif "feed://feeds.nbcnews.com" in str(url):
                     src = 'nbcnews'
                     desc = entry['summary_detail'].value.split('<')[0]
+                    
+                    for img in dom.by_tag('img'):
+                        imgsrc = check_img(img, minh=100)
+                        if imgsrc:
+                            pic = imgsrc
+                            break
+                    
                     for div in dom.by_tag('div'):
                             if div.attributes.get('class') == "articleText":
                                 for p in div.by_tag('p'):
@@ -95,6 +129,13 @@ def get_recent(feed, date, url):
                 elif "feed://rss.nytimes.com" in str(url):
                     src = 'nytimes'
                     desc = entry['summary_detail'].value.split('<')[0]
+                    
+                    for img in dom.by_tag('img'):
+                        imgsrc = check_img(img, minh=100)
+                        if imgsrc:
+                            pic = imgsrc
+                            break
+                    
                     for div in dom.by_tag('div'):
                         # try:
                             if div.attributes.get('class') == "articleBody":
