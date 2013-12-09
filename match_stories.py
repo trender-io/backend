@@ -216,12 +216,10 @@ for k,s in scores:
                         story['link'][:255], 
                         story['description'][:255], 
                         story['picture'] if len(story['picture']) < 256 else '', 
-                        story['ts'], 
-                        count))
+                        story['ts']))
     count += 1
 
-newdf = pd.DataFrame(new_stories, columns=["title", "url", "desc", "img", "ts", "score"]).drop_duplicates('url')
-count = len(newdf.title)
+newdf = pd.DataFrame(new_stories, columns=["title", "url", "desc", "img", "ts"]).drop_duplicates('url')
 
 # connect to DB
 conn = psycopg2.connect("dbname=trender user=frontend password=tr3nderI0 host=trender.cow4slz21i2f.us-west-2.rds.amazonaws.com")
@@ -234,11 +232,13 @@ row = cursor.fetchone()
 if len(row) > 0:
     last = row[0]
 
+count = 0
 now = datetime.utcnow()
 
 for idx,row in newdf.iterrows():
     cursor.execute("INSERT INTO stories (title,url,extract,image,time,rating,created_at,updated_at) VALUES(%s,%s,%s,%s,%s,%s,%s,%s);", 
-                   (row['title'], row['url'], row['desc'], row['img'], row['ts'], count - row['score'], now, now))
+                   (row['title'], row['url'], row['desc'], row['img'], row['ts'], count, now, now))
+    count += 1
     
 conn.commit()
 
