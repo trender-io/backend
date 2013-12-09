@@ -15,7 +15,7 @@ def check_img(img, minh=0, minw=0):
     src = img.attributes.get('src')
 
     if src:
-        if not (".jpg" in src or ".png" in src):
+        if not "jpg" in src:
             return None
     
         h = img.attributes.get('height')
