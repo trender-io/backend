@@ -137,7 +137,7 @@ for p in filtered_df.published:
                 ts.append(datetime.strptime(p[:-4], "%a, %d %b %Y %H:%M:%S"))
             except:
                 ts.append(datetime.strptime(p[:-4], "%a, %d %b %Y %H:%M"))
-published['ts'] = ts
+filtered_df.published = ts
 
 # Filter the dataframe
 filtered_df = filtered_df.sort(columns="published", ascending=False)
