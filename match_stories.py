@@ -96,9 +96,17 @@ def all_site_bias(keyword, bysrc):
 
 outdir = 'collected'
 storyfile = os.path.join(outdir, 'stories.csv')
+configfile = 'config.json'
 posfile = 'positive.txt'
 negfile = 'negative.txt'
 posnegurl = 'http://www.unc.edu/~ncaren/haphazard/'
+
+if not os.path.exists(configfile):
+    print "MISSING CONFIG FILE!"
+    sys.exit(-1)
+
+with open('configfile', 'r') as fp:
+    config = json.load(fp)
 
 if not os.path.exists(storyfile):
     print "MISSING STORY FILE!"
@@ -222,7 +230,8 @@ for k,s in scores:
 newdf = pd.DataFrame(new_stories, columns=["title", "url", "desc", "img", "ts"]).drop_duplicates('url')
 
 # connect to DB
-conn = psycopg2.connect("dbname=trender user=frontend password=tr3nderI0 host=trender.cow4slz21i2f.us-west-2.rds.amazonaws.com")
+conn = psycopg2.connect("host=%s dbname=%s user=%s password=%s" % \
+                        (config['dbname'], config['user'], config['pass'], config['host']))
 cursor = conn.cursor()
 
 # figure out the latest story in the DB
