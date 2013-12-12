@@ -236,8 +236,16 @@ count = 0
 now = datetime.utcnow()
 
 for idx,row in newdf.iterrows():
-    cursor.execute("INSERT INTO stories (title,url,extract,image,time,rating,created_at,updated_at) VALUES(%s,%s,%s,%s,%s,%s,%s,%s);", 
-                   (row['title'], row['url'], row['desc'], row['img'], row['ts'], count, now, now))
+    cat = ''
+    if 'tech' in row['url']:
+        cat = 'tech'
+    elif 'sport' in row['url']:
+        cat = 'sport'
+    elif 'world' in row['url'] or 'news' in row['url']:
+        cat = 'news'
+    
+    cursor.execute("INSERT INTO stories (title,url,extract,image,time,rating,categories,created_at,updated_at) VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s);", 
+                   (row['title'], row['url'], row['desc'], row['img'], row['ts'], count, cat, now, now))
     count += 1
     
 conn.commit()
