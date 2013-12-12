@@ -105,7 +105,7 @@ if not os.path.exists(configfile):
     print "MISSING CONFIG FILE!"
     sys.exit(-1)
 
-with open('configfile', 'r') as fp:
+with open(configfile, 'r') as fp:
     config = json.load(fp)
 
 if not os.path.exists(storyfile):
