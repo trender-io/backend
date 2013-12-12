@@ -231,7 +231,7 @@ newdf = pd.DataFrame(new_stories, columns=["title", "url", "desc", "img", "ts"])
 
 # connect to DB
 conn = psycopg2.connect("host=%s dbname=%s user=%s password=%s" % \
-                        (config['dbname'], config['user'], config['pass'], config['host']))
+                        (config['host'], config['dbname'], config['user'], config['pass']))
 cursor = conn.cursor()
 
 # figure out the latest story in the DB
