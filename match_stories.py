@@ -22,13 +22,14 @@ def extract_words(df):
 def number_of_pos_neg(df):
     numPos=0
     numNeg=0
-    for l in df['pos']:
-        numPos=numPos+len(l)
-    for m in df['neg']:
-        numNeg=numNeg+len(m)
-    total = numPos+numNeg
-    pos_bias_percentage = float(numPos)/float(total) if total > 0 else 0
-    return numPos, numNeg, total, pos_bias_percentage
+    numTotal=0
+    for p in df['pos']:
+        numPos=numPos+len(p)
+    for n in df['neg']:
+        numNeg=numNeg+len(n)
+    for t in df['total_words']:
+        numTotal=numTotal+t
+    return 'Number Positive Words ' ,numPos, 'Number Negative Words ' ,numNeg, 'Total', numTotal,'bias',float(numPos+numNeg)/float(numTotal)
     
 
 def news_content(dfall, newssource):
@@ -51,6 +52,7 @@ def analyze_words(allwords):
     allpos=[]
     positive_words=[]
     negative_words=[]
+    total_words=[]
     for article in allwords:
         for word in article:
             if word in poswords:
@@ -59,9 +61,10 @@ def analyze_words(allwords):
                 negative_words.append(word)
         allpos.append([0] if not positive_words else positive_words)
         allneg.append([0] if not negative_words else negative_words)
+        total_words.append(0 if len(article)==0 else len(article))
         negative_words=[]
         positive_words=[]
-    return pd.DataFrame({'pos':allpos,'neg':allneg})
+    return pd.DataFrame({'pos':allpos,'neg':allneg,'total_words':total_words})
     
     
 def keyword_bias(keyword, site, bysrc):
@@ -204,12 +207,12 @@ for k,s in scores:
         bias = overall_bias * 0.2 + \
                bias_by_site[src][2]['bias'] * 0.4 + \
                keyword_bias(k, src, bysrc)[5] * 0.3 + \
-               number_of_pos_neg(bysrc[src]['posneg'])[3]
+               number_of_pos_neg(bysrc[src]['posneg'])[3] * 0.1
         
         if len(bias) == 0:
             continue
         
-        links = sorted(zip(bias_by_site[src][2]['links'], [abs(0.5-x) for x in bias.values]), key=itemgetter(1))
+        links = sorted(zip(bias_by_site[src][2]['links'], [x for x in bias.values]), key=itemgetter(1))
         ranked.append((src, links[0][0], links[0][1]))
     
     if len(ranked) == 0:
